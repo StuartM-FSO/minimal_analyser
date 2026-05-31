@@ -1,4 +1,3 @@
-#include <sys/_stdint.h>
 // NOTES
 // 1. display_clear() only clears the buffer. User must call display_update to flush and clear screen
 // 2. Potential for cursor set to overflow if larger text size is used. But text size (1) is only ever used.
