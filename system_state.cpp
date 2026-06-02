@@ -65,7 +65,7 @@ system_function_t system_state_set_cell_check_time(const uint32_t check_time){
 bool is_valid_loop_state(loop_state_t state){
   switch (state) {
     case STATE_READ_CELL:
-    case STATE_ADC_FAILURE:
+    case STATE_HW_FAILURE:
     case STATE_UNINITIALISED:
     case STATE_START_UP:
     case STATE_FAILED_SAFE:
