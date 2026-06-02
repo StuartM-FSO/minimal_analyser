@@ -16,7 +16,8 @@ typedef enum{
   HW_UNINITIALISED,
   HW_OK,
   HW_STATE_FAILED,
-  HW_GPIO_INIT_FAILED
+  HW_GPIO_INIT_FAILED,
+  HW_ADC_INIT_FAILED
 } hw_state_t;
 
 typedef enum{
