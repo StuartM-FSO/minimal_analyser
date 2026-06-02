@@ -14,7 +14,9 @@ const uint16_t CAL_PERCENT_MIN = 75U;
 const uint16_t CAL_PERCENT_MAX = 125U;
 
 const uint16_t ADC_REFERENCE_RAW = 1600U;
-const uint16_t ADC_REFERENCE_FO2_X10 = 210U; // 21.0%
+const uint16_t ADC_REFERENCE_FO2_X10 = 210U;
+
+const uint16_t MAXIMUM_PPO2_X1000 = 16000U;
 
 
 
@@ -100,6 +102,7 @@ void fsm_handler_read_cell(const uint32_t now){
   uint16_t fo2 = 0;
   uint16_t mV = 0;
   uint16_t calibrated_fo2;
+  uint16_t mod_msw = 0;
 
   if(system_state_get_cell_check_time(&last_check_time) != SYSTEM_OK){
     system_state_set_loop_state(STATE_FAILED_SAFE);
@@ -122,7 +125,10 @@ void fsm_handler_read_cell(const uint32_t now){
     fo2 = convert_raw_to_fo2(raw_reading);
     mV = adc_convert_raw_to_mV(raw_reading);
     calibrated_fo2 = calibrate_value_to_percent(fo2, calibration_reading);
+    mod_msw = calculate_mod(calibrated_fo2);
     Serial.print(mV);
+    Serial.print(" ");
+    Serial.print(mod_msw);
     Serial.print(" ");
     Serial.print(calibrated_fo2);
     Serial.print(" ");
@@ -162,4 +168,9 @@ uint16_t convert_raw_to_fo2(const uint16_t raw_reading){
   const uint32_t numerator = (uint32_t)(raw_reading) * ADC_REFERENCE_FO2_X10;
 
   return (uint16_t)((numerator + (ADC_REFERENCE_RAW / 2U)) / ADC_REFERENCE_RAW);
+}
+
+uint16_t calculate_mod(const uint16_t fo2_x10){
+  Serial.println(MAXIMUM_PPO2_X1000 / fo2_x10 - 10);
+  return 100;
 }
