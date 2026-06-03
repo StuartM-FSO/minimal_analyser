@@ -40,4 +40,9 @@ system_function_t system_state_set_loop_check_time(const uint32_t check_time);
 bool system_state_get_run_once_flag(void);
 void system_state_set_run_once_flag(bool flag);
 
+bool system_state_get_pulse_on_flag(void);
+void system_state_invert_pulse_on_flag(void);
+system_function_t system_state_get_pulse_check_time(uint32_t *check_time);
+system_function_t system_state_set_pulse_check_time(const uint32_t check_time);
+
 #endif

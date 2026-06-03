@@ -5,6 +5,8 @@ typedef struct{
   loop_state_t loop_state = STATE_UNINITIALISED;
   uint32_t loop_check_time = 0U;
   bool run_once = false;
+  bool pulse_on = false;
+  uint32_t pulse_time = 0U;
 } system_state_t;
 
 
@@ -67,6 +69,33 @@ bool system_state_get_run_once_flag(void){
 
 void system_state_set_run_once_flag(bool flag){
   current_state.run_once = flag;
+}
+
+bool system_state_get_pulse_on_flag(void){
+  return current_state.pulse_on;
+}
+
+void system_state_invert_pulse_on_flag(void){
+  current_state.pulse_on = !current_state.pulse_on;
+}
+
+system_function_t system_state_get_pulse_check_time(uint32_t *check_time){
+  if(!current_state.initialised){
+    return SYSTEM_UNINITIALISED;
+  }
+  if(check_time == NULL){
+    return SYSTEM_INVALID_PARAMETER;
+  }
+  *check_time = current_state.pulse_time;
+  return SYSTEM_OK;
+}
+
+system_function_t system_state_set_pulse_check_time(const uint32_t check_time){
+  if(!current_state.initialised){
+    return SYSTEM_UNINITIALISED;
+  }
+  current_state.pulse_time = check_time;
+  return SYSTEM_OK;
 }
 
 // Private

@@ -127,6 +127,7 @@ void fsm_handler_start_up(void){
 
 void fsm_handler_read_cell(const uint32_t now){
   uint32_t last_check_time = 0U;
+  uint32_t pulse_check_time = 0U;
   uint16_t raw_reading = 0;
   uint16_t calibration_reading = 0;
   uint16_t fo2 = 0;
@@ -193,6 +194,15 @@ void fsm_handler_read_cell(const uint32_t now){
     }
     display_print(buffer_mv);
     display_println("mV");
+    if(system_state_get_pulse_on_flag()){
+      display_print("+");
+    }
+    system_state_get_pulse_check_time(&pulse_check_time);
+    if(has_timer_elapsed(now, pulse_check_time, ONE_SECOND_MS)){
+      system_state_invert_pulse_on_flag();
+      system_state_set_pulse_check_time(now);
+    }
+
     display_update();
   }
 }
