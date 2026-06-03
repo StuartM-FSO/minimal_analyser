@@ -60,7 +60,11 @@ void setup() {
       system_state_set_loop_state(STATE_FAILED_SAFE);
       break;
     case HW_ADC_INIT_FAILED:
+      system_state_set_loop_state(STATE_ADC_FAILED);
+      break;
     case HW_GPIO_INIT_FAILED:
+      system_state_set_loop_state(STATE_GPIO_FAILED);
+      break;
     case HW_STATE_FAILED:
       system_state_set_loop_state(STATE_HW_FAILURE);
       break;
@@ -68,7 +72,6 @@ void setup() {
       system_state_set_loop_state(STATE_FAILED_SAFE);
       break;
   }
-  
 }
 
 void loop() {
@@ -90,8 +93,15 @@ void loop() {
       fsm_handler_hw_failure();
       break;
     case STATE_UNINITIALISED:
+      fsm_handler_uninitialised();
       break;
     case STATE_FAILED_SAFE:
+      break;
+    case STATE_GPIO_FAILED:
+      fsm_handler_gpio_failed();
+      break;
+    case STATE_ADC_FAILED:
+      fsm_handler_adc_failed();
       break;
     default:
       system_state_set_loop_state(STATE_FAILED_SAFE);
@@ -100,6 +110,28 @@ void loop() {
 }
 
 // 1. STATE MACHINE HANDLERS
+
+void fsm_handler_uninitialised(){
+  // Carry out a system reset and try again
+}
+
+void fsm_handler_gpio_failed(void){
+  display_clear();
+  display_set_cursor(0, 0);
+  display_println("CAL POT");
+  display_println("FAILED");
+  display_update();
+  while(true);
+}
+
+void fsm_handler_adc_failed(void){
+  display_clear();
+  display_set_cursor(0, 0);
+  display_println("ADS1115");
+  display_println("FAILED");
+  display_update();
+  while(true);
+}
 
 void fsm_handler_start_up(void){
   uint32_t last_time = 0;
@@ -145,7 +177,7 @@ void fsm_handler_read_cell(const uint32_t now){
 
   if(has_timer_elapsed(now, last_check_time, CELL_READ_FREQUENCY_MS)){
     if(adc_raw_reading(&raw_reading) != ADC_STATUS_OK){
-      system_state_set_loop_state(STATE_HW_FAILURE);
+      system_state_set_loop_state(STATE_ADC_FAILED);
       return;
     }
     if(!gpio_read_calibration_pin(&calibration_reading)){
@@ -215,7 +247,6 @@ void fsm_handler_hw_failure(void){
 }
 
 void fsm_handler_failed_safe(void){
-  Serial.println("FAILED SAFE!");
   delay(1000);
 }
 
