@@ -37,5 +37,7 @@ system_function_t system_state_get_loop_state(loop_state_t *state);
 system_function_t system_state_get_loop_check_time(uint32_t *check_time);
 system_function_t system_state_set_loop_check_time(const uint32_t check_time);
 
+bool system_state_get_run_once_flag(void);
+void system_state_set_run_once_flag(bool flag);
 
 #endif

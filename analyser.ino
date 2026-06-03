@@ -21,6 +21,8 @@ const uint16_t DEPTH_CORRECTION_FACTOR = 10U;
 
 const uint16_t HYPOXIC_THRESHOLD_X10 = 170U;
 
+const uint32_t ONE_SECOND_MS = 1000U;
+
 
 
 void setup() {
@@ -100,15 +102,27 @@ void loop() {
 // 1. STATE MACHINE HANDLERS
 
 void fsm_handler_start_up(void){
-  Serial.println("Start up");
-  display_clear();
-  display_font_size(2);
-  display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
-  display_set_cursor(0, 0);
-  display_print("START");
-  display_update();
-  delay(1000);
-  system_state_set_loop_state(STATE_READ_CELL);
+  uint32_t last_time = 0;
+  uint32_t now = millis();
+
+  if(system_state_get_loop_check_time(&last_time) != SYSTEM_OK){
+    system_state_set_loop_state(STATE_HW_FAILURE);
+    return;
+  }
+  if(has_timer_elapsed(now, last_time, ONE_SECOND_MS)){
+    system_state_set_loop_state(STATE_READ_CELL);
+    return;
+  }
+  if(!system_state_get_run_once_flag()){
+    Serial.println("Start up");
+    display_clear();
+    display_font_size(2);
+    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+    display_set_cursor(0, 0);
+    display_print("START");
+    display_update();
+    system_state_set_run_once_flag(true);
+  }
 }
 
 void fsm_handler_read_cell(const uint32_t now){
@@ -178,7 +192,7 @@ void fsm_handler_read_cell(const uint32_t now){
       display_print("  ");
     }
     display_print(buffer_mv);
-    display_print("mV");
+    display_println("mV");
     display_update();
   }
 }

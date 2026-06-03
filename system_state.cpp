@@ -4,6 +4,7 @@ typedef struct{
   bool initialised = false;
   loop_state_t loop_state = STATE_UNINITIALISED;
   uint32_t loop_check_time = 0U;
+  bool run_once = false;
 } system_state_t;
 
 
@@ -21,6 +22,7 @@ bool system_state_init(void){
   }
   current_state.loop_state = STATE_READ_CELL;
   current_state.initialised = true;
+  current_state.run_once = false;
   return true;
 }
 
@@ -57,6 +59,14 @@ system_function_t system_state_get_loop_check_time(uint32_t *check_time){
 system_function_t system_state_set_loop_check_time(const uint32_t check_time){
   current_state.loop_check_time = check_time;
   return SYSTEM_OK;
+}
+
+bool system_state_get_run_once_flag(void){
+  return current_state.run_once;
+}
+
+void system_state_set_run_once_flag(bool flag){
+  current_state.run_once = flag;
 }
 
 // Private
