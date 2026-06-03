@@ -123,7 +123,7 @@ void fsm_handler_read_cell(const uint32_t now){
   char buffer_mod[4] = {""};
   char buffer_mv[4] = {""};
 
-  if(system_state_get_cell_check_time(&last_check_time) != SYSTEM_OK){
+  if(system_state_get_loop_check_time(&last_check_time) != SYSTEM_OK){
     system_state_set_loop_state(STATE_FAILED_SAFE);
     return;
   }
@@ -137,7 +137,7 @@ void fsm_handler_read_cell(const uint32_t now){
       system_state_set_loop_state(STATE_FAILED_SAFE);
       return;
     }
-    if(system_state_set_cell_check_time(now) != SYSTEM_OK){
+    if(system_state_set_loop_check_time(now) != SYSTEM_OK){
       system_state_set_loop_state(STATE_FAILED_SAFE);
       return;
     }

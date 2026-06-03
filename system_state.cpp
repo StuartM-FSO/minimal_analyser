@@ -3,8 +3,7 @@
 typedef struct{
   bool initialised = false;
   loop_state_t loop_state = STATE_UNINITIALISED;
-  hw_state_t current_hw_state = HW_UNINITIALISED;
-  uint32_t cell_check_time = 0U;
+  uint32_t loop_check_time = 0U;
 } system_state_t;
 
 
@@ -12,6 +11,7 @@ typedef struct{
 static system_state_t current_state;
 
 bool is_valid_loop_state(loop_state_t state);
+//bool is_valid_hw_state(const hw_state_t state);
 
 // Public
 
@@ -43,21 +43,44 @@ system_function_t system_state_get_loop_state(loop_state_t *state){
   return SYSTEM_OK;
 }
 
-system_function_t system_state_get_cell_check_time(uint32_t *check_time){
+system_function_t system_state_get_loop_check_time(uint32_t *check_time){
   if(!current_state.initialised){
     return SYSTEM_UNINITIALISED;
   }
   if(check_time == NULL){
     return SYSTEM_INVALID_PARAMETER;
   }
-  *check_time = current_state.cell_check_time;
+  *check_time = current_state.loop_check_time;
   return SYSTEM_OK;
 }
 
-system_function_t system_state_set_cell_check_time(const uint32_t check_time){
-  current_state.cell_check_time = check_time;
+system_function_t system_state_set_loop_check_time(const uint32_t check_time){
+  current_state.loop_check_time = check_time;
   return SYSTEM_OK;
 }
+
+/* system_function_t system_state_get_hw_state(hw_state_t *state){
+  if(!current_state.initialised){
+    return SYSTEM_UNINITIALISED;
+  }
+  if(state == NULL){
+    return SYSTEM_INVALID_PARAMETER;
+  }
+  *state = current_state.current_hw_state;
+  return SYSTEM_OK;
+}
+
+system_function_t system_state_set_hw_state(const hw_state_t state){
+  if(!current_state.initialised){
+    return SYSTEM_UNINITIALISED;
+  }
+  if(!is_valid_hw_state(state)){
+    return SYSTEM_INVALID_PARAMETER;
+  }
+  current_state.current_hw_state = state;
+  return SYSTEM_OK;
+} */
+
 
 
 // Private
@@ -74,3 +97,10 @@ bool is_valid_loop_state(loop_state_t state){
       return false;
   }
 }
+
+/* bool is_valid_hw_state(const hw_state_t state){
+  if((state <= HW_ZERO_COUNT) || (state >= HW_END_COUNT)){
+    return false;
+  }
+  return true;
+} */
