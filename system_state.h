@@ -37,7 +37,5 @@ system_function_t system_state_get_loop_state(loop_state_t *state);
 system_function_t system_state_get_loop_check_time(uint32_t *check_time);
 system_function_t system_state_set_loop_check_time(const uint32_t check_time);
 
-//system_function_t system_state_get_hw_state(hw_state_t *state);
-//system_function_t system_state_set_hw_state(const hw_state_t state);
 
 #endif

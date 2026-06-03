@@ -59,30 +59,6 @@ system_function_t system_state_set_loop_check_time(const uint32_t check_time){
   return SYSTEM_OK;
 }
 
-/* system_function_t system_state_get_hw_state(hw_state_t *state){
-  if(!current_state.initialised){
-    return SYSTEM_UNINITIALISED;
-  }
-  if(state == NULL){
-    return SYSTEM_INVALID_PARAMETER;
-  }
-  *state = current_state.current_hw_state;
-  return SYSTEM_OK;
-}
-
-system_function_t system_state_set_hw_state(const hw_state_t state){
-  if(!current_state.initialised){
-    return SYSTEM_UNINITIALISED;
-  }
-  if(!is_valid_hw_state(state)){
-    return SYSTEM_INVALID_PARAMETER;
-  }
-  current_state.current_hw_state = state;
-  return SYSTEM_OK;
-} */
-
-
-
 // Private
 
 bool is_valid_loop_state(loop_state_t state){
@@ -97,10 +73,3 @@ bool is_valid_loop_state(loop_state_t state){
       return false;
   }
 }
-
-/* bool is_valid_hw_state(const hw_state_t state){
-  if((state <= HW_ZERO_COUNT) || (state >= HW_END_COUNT)){
-    return false;
-  }
-  return true;
-} */
