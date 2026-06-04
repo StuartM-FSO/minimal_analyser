@@ -110,8 +110,15 @@ void loop() {
 }
 
 // Functions
+//  0. WORK IN PROGRESS -- MOVE TO CORRECT SECTION
 //  1. STATE MACHINE HANDLERS
 //  2. DISPLAY HELPERS 
+//  3. TIME HELPERS
+//  4. FO2 CALCULATIONS
+
+// 0. WORK IN PROGRESS -- MOVE TO CORRECT SECTION
+
+
 
 // 1. STATE MACHINE HANDLERS
 
@@ -170,14 +177,10 @@ void fsm_handler_read_cell(const uint32_t now){
   uint16_t calibrated_fo2;
   uint16_t mod_msw = 0;
   
-  
-  
-
   if(system_state_get_loop_check_time(&last_check_time) != SYSTEM_OK){
     system_state_set_loop_state(STATE_FAILED_SAFE);
     return;
   }
-
   if(has_timer_elapsed(now, last_check_time, CELL_READ_FREQUENCY_MS)){
     if(adc_raw_reading(&raw_reading) != ADC_STATUS_OK){
       system_state_set_loop_state(STATE_ADC_FAILED);
@@ -195,23 +198,15 @@ void fsm_handler_read_cell(const uint32_t now){
     mV = adc_convert_raw_to_mV(raw_reading);
     calibrated_fo2 = calibrate_value_to_percent(fo2, calibration_reading);
     mod_msw = calculate_mod(calibrated_fo2);
-    
     display_clear();
     display_set_cursor(0, 0);
     print_fo2_to_display(calibrated_fo2);
     print_mod_to_display(mod_msw);
     print_mv_to_display(mV);
     print_pulse_to_display(now);
-    
-    //display_font_size(1);
-    
-    
-
     display_update();
   }
 }
-
-
 
 void fsm_handler_hw_failure(void){
   display_clear();
@@ -222,116 +217,6 @@ void fsm_handler_hw_failure(void){
 
 void fsm_handler_failed_safe(void){
   delay(1000);
-}
-
-
-bool has_timer_elapsed(const uint32_t current_time, const uint32_t last_time, const uint32_t frequency){
-  return (current_time - last_time) >= frequency; // See Note 9
-}
-
-
-
-uint16_t calibrate_value_to_percent(uint16_t raw_reading, uint16_t potentiometer_reading){
-  uint16_t calibration_factor = 0;
-  uint16_t calibration_range = CAL_PERCENT_MAX - CAL_PERCENT_MIN;
-  uint16_t pot_range = POT_MAX - POT_MIN;
-
-  if(potentiometer_reading < POT_MIN){
-    potentiometer_reading = POT_MIN;
-  }
-  if(potentiometer_reading > POT_MAX){
-    potentiometer_reading = POT_MAX;
-  }
-  calibration_factor = CAL_PERCENT_MIN + ((uint32_t)(potentiometer_reading - POT_MIN) * calibration_range) / pot_range;
-
-  return ((uint32_t)raw_reading * calibration_factor) / 100;
-}
-
-
-uint16_t convert_raw_to_fo2(const uint16_t raw_reading){
-  const uint32_t numerator = (uint32_t)(raw_reading) * ADC_REFERENCE_FO2_X10;
-
-  return (uint16_t)((numerator + (ADC_REFERENCE_RAW / 2U)) / ADC_REFERENCE_RAW);
-}
-
-uint16_t calculate_mod(const uint16_t fo2){
-  uint16_t rounded_down = fo2 / DEPTH_CORRECTION_FACTOR * DEPTH_CORRECTION_FACTOR;
-  if(rounded_down == 0U){
-    return 0U;
-  }
-  return MAXIMUM_PPO2_X1000 / rounded_down - DEPTH_CORRECTION_FACTOR;
-}
-
-
-void format_fo2_for_display(uint16_t fo2, char buffer[6]){
-  uint16_t integer_part = 0;
-  uint16_t temp = 0;
-  uint8_t digit = 0;
-  //uint8_t pos = 0;
-
-  if (fo2 > 9999U){
-    fo2 = 9999U;
-  }
-  integer_part = fo2 / 10U;
-
-  /* Hundreds digit */
-  temp = integer_part;
-  digit = (uint8_t)(temp / 100U);
-  buffer[0] = (char)('0' + digit);
-
-  temp %= 100U;
-
-  /* Tens digit */
-  digit = (uint8_t)(temp / 10U);
-  buffer[1] = (char)('0' + digit);
-
-  /* Units digit */
-  digit = (uint8_t)(temp % 10U);
-  buffer[2] = (char)('0' + digit);
-
-  buffer[3] = '.';
-
-  /* Tenths digit */
-  digit = (uint8_t)(fo2 % 10U);
-  buffer[4] = (char)('0' + digit);
-
-  buffer[5] = '\0';
-
-  if (buffer[0] == '0')
-  {
-      buffer[0] = ' ';
-  }
-
-  if ((buffer[0] == ' ') && (buffer[1] == '0'))
-  {
-      buffer[1] = ' ';
-  }
-
-  //pos = 0U;
-  //(void)pos; /* Silence unused-variable warning if MISRA checker requires it */
-}
-
-void format_integer_for_display(uint16_t value, char buffer[4]){
-  uint16_t temp;
-  uint8_t pos = 0U;
-
-  if(value > 999U){
-    value = 999U;
-  }
-  if(value >= 100U){
-    buffer[pos] = (char)('0' + (uint8_t)(value / 100U));
-    pos++;
-    value %= 100U;
-  }
-  if((value >= 10U) || (pos > 0U)){
-    buffer[pos] = (char)('0' + (uint8_t)(value / 10U));
-    pos++;
-    value %= 10U;
-  }
-  temp = value;
-  buffer[pos] = (char)('0' + (uint8_t)temp);
-  pos++;
-  buffer[pos] = '\0';
 }
 
 // 2. DISPLAY HELPERS
@@ -392,4 +277,110 @@ void print_fo2_to_display(const uint16_t calibrated_fo2){
   display_print(buffer_fo2);
   display_println("%");
   display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+}
+
+void format_fo2_for_display(uint16_t fo2, char buffer[6]){
+  uint16_t integer_part = 0;
+  uint16_t temp = 0;
+  uint8_t digit = 0;
+
+  if (fo2 > 9999U){
+    fo2 = 9999U;
+  }
+  integer_part = fo2 / 10U;
+
+  /* Hundreds digit */
+  temp = integer_part;
+  digit = (uint8_t)(temp / 100U);
+  buffer[0] = (char)('0' + digit);
+
+  temp %= 100U;
+
+  /* Tens digit */
+  digit = (uint8_t)(temp / 10U);
+  buffer[1] = (char)('0' + digit);
+
+  /* Units digit */
+  digit = (uint8_t)(temp % 10U);
+  buffer[2] = (char)('0' + digit);
+
+  buffer[3] = '.';
+
+  /* Tenths digit */
+  digit = (uint8_t)(fo2 % 10U);
+  buffer[4] = (char)('0' + digit);
+
+  buffer[5] = '\0';
+
+  if (buffer[0] == '0')
+  {
+    buffer[0] = ' ';
+  }
+
+  if ((buffer[0] == ' ') && (buffer[1] == '0'))
+  {
+    buffer[1] = ' ';
+  }
+}
+
+void format_integer_for_display(uint16_t value, char buffer[4]){
+  uint16_t temp;
+  uint8_t pos = 0U;
+
+  if(value > 999U){
+    value = 999U;
+  }
+  if(value >= 100U){
+    buffer[pos] = (char)('0' + (uint8_t)(value / 100U));
+    pos++;
+    value %= 100U;
+  }
+  if((value >= 10U) || (pos > 0U)){
+    buffer[pos] = (char)('0' + (uint8_t)(value / 10U));
+    pos++;
+    value %= 10U;
+  }
+  temp = value;
+  buffer[pos] = (char)('0' + (uint8_t)temp);
+  pos++;
+  buffer[pos] = '\0';
+}
+
+// 3. TIME HELPERS
+
+bool has_timer_elapsed(const uint32_t current_time, const uint32_t last_time, const uint32_t frequency){
+  return (current_time - last_time) >= frequency; // See Note 9
+}
+
+// 4. FO2 CALCULATIONS
+
+uint16_t calibrate_value_to_percent(uint16_t raw_reading, uint16_t potentiometer_reading){
+  uint16_t calibration_factor = 0;
+  uint16_t calibration_range = CAL_PERCENT_MAX - CAL_PERCENT_MIN;
+  uint16_t pot_range = POT_MAX - POT_MIN;
+
+  if(potentiometer_reading < POT_MIN){
+    potentiometer_reading = POT_MIN;
+  }
+  if(potentiometer_reading > POT_MAX){
+    potentiometer_reading = POT_MAX;
+  }
+  calibration_factor = CAL_PERCENT_MIN + ((uint32_t)(potentiometer_reading - POT_MIN) * calibration_range) / pot_range;
+
+  return ((uint32_t)raw_reading * calibration_factor) / 100;
+}
+
+
+uint16_t convert_raw_to_fo2(const uint16_t raw_reading){
+  const uint32_t numerator = (uint32_t)(raw_reading) * ADC_REFERENCE_FO2_X10;
+
+  return (uint16_t)((numerator + (ADC_REFERENCE_RAW / 2U)) / ADC_REFERENCE_RAW);
+}
+
+uint16_t calculate_mod(const uint16_t fo2){
+  uint16_t rounded_down = fo2 / DEPTH_CORRECTION_FACTOR * DEPTH_CORRECTION_FACTOR;
+  if(rounded_down == 0U){
+    return 0U;
+  }
+  return MAXIMUM_PPO2_X1000 / rounded_down - DEPTH_CORRECTION_FACTOR;
 }
