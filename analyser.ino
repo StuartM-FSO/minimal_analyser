@@ -109,6 +109,10 @@ void loop() {
   }
 }
 
+// Functions
+//  1. STATE MACHINE HANDLERS
+//  2. DISPLAY HELPERS 
+
 // 1. STATE MACHINE HANDLERS
 
 void fsm_handler_uninitialised(){
@@ -159,16 +163,15 @@ void fsm_handler_start_up(void){
 
 void fsm_handler_read_cell(const uint32_t now){
   uint32_t last_check_time = 0U;
-  uint32_t pulse_check_time = 0U;
   uint16_t raw_reading = 0;
   uint16_t calibration_reading = 0;
   uint16_t fo2 = 0;
   uint16_t mV = 0;
   uint16_t calibrated_fo2;
   uint16_t mod_msw = 0;
-  char buffer_fo2[6] = {""};
-  char buffer_mod[4] = {""};
-  char buffer_mv[4] = {""};
+  
+  
+  
 
   if(system_state_get_loop_check_time(&last_check_time) != SYSTEM_OK){
     system_state_set_loop_state(STATE_FAILED_SAFE);
@@ -192,52 +195,23 @@ void fsm_handler_read_cell(const uint32_t now){
     mV = adc_convert_raw_to_mV(raw_reading);
     calibrated_fo2 = calibrate_value_to_percent(fo2, calibration_reading);
     mod_msw = calculate_mod(calibrated_fo2);
-    format_fo2_for_display(calibrated_fo2, buffer_fo2);
-    format_integer_for_display(mod_msw, buffer_mod);
-    format_integer_for_display(mV, buffer_mv);
-
+    
     display_clear();
     display_set_cursor(0, 0);
-    display_print("fO2 ");
-    if(calibrated_fo2 < HYPOXIC_THRESHOLD_X10){
-      display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
-    }
-    display_print(buffer_fo2);
-    display_println("%");
-    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
-    display_print("MOD");
-    if(mod_msw < 10){
-      display_print("   ");
-    } else if (mod_msw > 99){
-      display_print(" ");
-    } else {
-      display_print("  ");
-    }
-    display_print(buffer_mod);
-    display_println("msw");
+    print_fo2_to_display(calibrated_fo2);
+    print_mod_to_display(mod_msw);
+    print_mv_to_display(mV);
+    print_pulse_to_display(now);
+    
     //display_font_size(1);
-    display_print("Cell");
-    if(mV < 10){
-      display_print("   ");
-    } else if (mV > 99){
-      display_print(" ");
-    } else {
-      display_print("  ");
-    }
-    display_print(buffer_mv);
-    display_println("mV");
-    if(system_state_get_pulse_on_flag()){
-      display_print("+");
-    }
-    system_state_get_pulse_check_time(&pulse_check_time);
-    if(has_timer_elapsed(now, pulse_check_time, ONE_SECOND_MS)){
-      system_state_invert_pulse_on_flag();
-      system_state_set_pulse_check_time(now);
-    }
+    
+    
 
     display_update();
   }
 }
+
+
 
 void fsm_handler_hw_failure(void){
   display_clear();
@@ -358,4 +332,64 @@ void format_integer_for_display(uint16_t value, char buffer[4]){
   buffer[pos] = (char)('0' + (uint8_t)temp);
   pos++;
   buffer[pos] = '\0';
+}
+
+// 2. DISPLAY HELPERS
+
+void print_pulse_to_display(const uint32_t now){
+  uint32_t pulse_check_time = 0U;
+
+  if(system_state_get_pulse_on_flag()){
+      display_print("+");
+  }
+  system_state_get_pulse_check_time(&pulse_check_time);
+  if(has_timer_elapsed(now, pulse_check_time, ONE_SECOND_MS)){
+    system_state_invert_pulse_on_flag();
+    system_state_set_pulse_check_time(now);
+  }
+}
+
+void print_mv_to_display(const uint16_t mV){
+  char buffer_mv[4] = {""};
+
+  format_integer_for_display(mV, buffer_mv);
+  display_print("Cell");
+  if(mV < 10){
+    display_print("   ");
+  } else if (mV > 99){
+    display_print(" ");
+  } else {
+    display_print("  ");
+  }
+  display_print(buffer_mv);
+  display_println("mV");
+}
+
+void print_mod_to_display(const uint16_t mod_msw){
+  char buffer_mod[4] = {""};
+
+  format_integer_for_display(mod_msw, buffer_mod);
+  display_print("MOD");
+  if(mod_msw < 10){
+    display_print("   ");
+  } else if (mod_msw > 99){
+    display_print(" ");
+  } else {
+    display_print("  ");
+  }
+  display_print(buffer_mod);
+  display_println("msw");
+}
+
+void print_fo2_to_display(const uint16_t calibrated_fo2){
+  char buffer_fo2[6] = {""};
+
+  format_fo2_for_display(calibrated_fo2, buffer_fo2);
+  display_print("fO2 ");
+  if(calibrated_fo2 < HYPOXIC_THRESHOLD_X10){
+    display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
+  }
+  display_print(buffer_fo2);
+  display_println("%");
+  display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
 }
