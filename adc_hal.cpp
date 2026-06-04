@@ -1,4 +1,3 @@
-#include "HardwareSerial.h"
 // NOTES
 // 1. Wire.begin() must be called in setup() in main sketch
 // 2. Use of delay() has been accepted in this situation
@@ -215,6 +214,7 @@ static hal_adc_status_t read_sensor(uint16_t * const reading){
     bool wait_timeout_ok;
     uint32_t start_time_ms = 0;
     uint32_t elapsed_time_ms = 0;
+    int32_t unfiltered_reading = 0;
 
     if(reading == NULL){
         return ADC_STATUS_INVALID_PARAMETER;
@@ -231,7 +231,8 @@ static hal_adc_status_t read_sensor(uint16_t * const reading){
         delay(1); // Reduces CPU cycles. Accepting the penalty of using delay() in this situation.
     }
     if(wait_timeout_ok){
-        *reading = (uint16_t)current_state.device.getLastConversionResults();
+        unfiltered_reading = current_state.device.getLastConversionResults();
+        *reading = (unfiltered_reading < 0) ? 0U : (uint16_t)unfiltered_reading;
         return ADC_STATUS_OK;
     } else {
         return ADC_STATUS_HW_ERROR;
