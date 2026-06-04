@@ -69,6 +69,7 @@ display_status_t display_init(void){
     state.device.setTextColor(TEXT_COLOUR_WHITE);
     state.device.display();
     state.initialised = true;
+    display_font_size(2);
     return DISPLAY_STATUS_OK;
 }
 

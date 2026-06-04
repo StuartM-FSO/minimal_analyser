@@ -4,24 +4,19 @@
 #include "gpio_hal.h"
 #include <Wire.h>
 
-static const uint32_t CELL_READ_FREQUENCY_MS = 250U;
-
-const uint16_t POT_MIN = 0U;
-const uint16_t POT_MAX = 700U;
-
-const uint16_t CAL_PERCENT_MIN = 75U;
-const uint16_t CAL_PERCENT_MAX = 125U;
-
-const uint16_t ADC_REFERENCE_RAW = 1600U; // for high output cells use 3200
-const uint16_t ADC_REFERENCE_FO2_X10 = 210U;
-
-const uint16_t MAXIMUM_PPO2_X1000 = 16000U;
-
-const uint16_t DEPTH_CORRECTION_FACTOR = 10U;
-
-const uint16_t HYPOXIC_THRESHOLD_X10 = 170U;
-
-const uint32_t ONE_SECOND_MS = 1000U;
+constexpr uint32_t CELL_READ_FREQUENCY_MS = 250U;
+constexpr uint16_t POT_MIN = 0U;
+constexpr uint16_t POT_MAX = 700U;
+constexpr uint16_t CAL_PERCENT_MIN = 75U;
+constexpr uint16_t CAL_PERCENT_MAX = 125U;
+constexpr uint16_t ADC_REFERENCE_RAW = 1600U; // for high output cells use 3200
+constexpr uint16_t ADC_REFERENCE_FO2_X10 = 210U;
+constexpr uint16_t MAXIMUM_PPO2_X1000 = 16000U;
+constexpr uint16_t DEPTH_CORRECTION_FACTOR = 10U;
+constexpr uint16_t HYPOXIC_THRESHOLD_X10 = 170U;
+constexpr uint32_t ONE_SECOND_MS = 1000U;
+constexpr uint8_t BUFFER_SIZE_INTEGER_DISPLAY = 4U;
+constexpr uint8_t BUFFER_SIZE_FO2_DISPLAY = 6U;
 
 
 
@@ -54,6 +49,7 @@ void setup() {
       system_state_set_loop_state(STATE_UNINITIALISED);
       break;
     case HW_OK:
+      system_state_set_loop_check_time(millis());
       system_state_set_loop_state(STATE_START_UP);
       break;
     case HW_DISPLAY_FAILED:
@@ -84,7 +80,7 @@ void loop() {
 
   switch (state) {
     case STATE_START_UP:
-      fsm_handler_start_up();
+      fsm_handler_start_up(now);
       break;
     case STATE_READ_CELL:
       fsm_handler_read_cell(now);
@@ -96,6 +92,7 @@ void loop() {
       fsm_handler_uninitialised();
       break;
     case STATE_FAILED_SAFE:
+      fsm_handler_failed_safe();
       break;
     case STATE_GPIO_FAILED:
       fsm_handler_gpio_failed();
@@ -132,7 +129,9 @@ void fsm_handler_gpio_failed(void){
   display_println("CAL POT");
   display_println("FAILED");
   display_update();
-  while(true);
+  for(;;){
+    yield();
+  }
 }
 
 void fsm_handler_adc_failed(void){
@@ -141,12 +140,13 @@ void fsm_handler_adc_failed(void){
   display_println("ADS1115");
   display_println("FAILED");
   display_update();
-  while(true);
+  for(;;){
+    yield();
+  }
 }
 
-void fsm_handler_start_up(void){
+void fsm_handler_start_up(const uint32_t now){
   uint32_t last_time = 0;
-  uint32_t now = millis();
 
   if(system_state_get_loop_check_time(&last_time) != SYSTEM_OK){
     system_state_set_loop_state(STATE_HW_FAILURE);
@@ -159,7 +159,6 @@ void fsm_handler_start_up(void){
   if(!system_state_get_run_once_flag()){
     Serial.println("Start up");
     display_clear();
-    display_font_size(2);
     display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
     display_set_cursor(0, 0);
     display_print("START");
@@ -213,10 +212,15 @@ void fsm_handler_hw_failure(void){
   display_set_cursor(0, 0);
   display_print("HW FAILED");
   display_update();
+  for(;;){
+    yield();
+  }
 }
 
 void fsm_handler_failed_safe(void){
-  delay(1000);
+  for(;;){
+    yield();
+  }
 }
 
 // 2. DISPLAY HELPERS
@@ -235,7 +239,7 @@ void print_pulse_to_display(const uint32_t now){
 }
 
 void print_mv_to_display(const uint16_t mV){
-  char buffer_mv[4] = {""};
+  char buffer_mv[BUFFER_SIZE_INTEGER_DISPLAY] = {""};
 
   format_integer_for_display(mV, buffer_mv);
   display_print("Cell");
@@ -251,7 +255,7 @@ void print_mv_to_display(const uint16_t mV){
 }
 
 void print_mod_to_display(const uint16_t mod_msw){
-  char buffer_mod[4] = {""};
+  char buffer_mod[BUFFER_SIZE_INTEGER_DISPLAY] = {""};
 
   format_integer_for_display(mod_msw, buffer_mod);
   display_print("MOD");
@@ -267,7 +271,7 @@ void print_mod_to_display(const uint16_t mod_msw){
 }
 
 void print_fo2_to_display(const uint16_t calibrated_fo2){
-  char buffer_fo2[6] = {""};
+  char buffer_fo2[BUFFER_SIZE_FO2_DISPLAY] = {""};
 
   format_fo2_for_display(calibrated_fo2, buffer_fo2);
   display_print("fO2 ");
@@ -364,6 +368,9 @@ uint16_t calibrate_value_to_percent(uint16_t raw_reading, uint16_t potentiometer
   }
   if(potentiometer_reading > POT_MAX){
     potentiometer_reading = POT_MAX;
+  }
+  if(pot_range == 0){
+    return raw_reading;
   }
   calibration_factor = CAL_PERCENT_MIN + ((uint32_t)(potentiometer_reading - POT_MIN) * calibration_range) / pot_range;
 
