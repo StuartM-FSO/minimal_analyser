@@ -24,6 +24,7 @@ void setup() {
   hw_state_t state = HW_UNINITIALISED;
 
   Wire.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
 
   Serial.begin(9600);
   while(!Serial){
@@ -53,6 +54,7 @@ void setup() {
       system_state_set_loop_state(STATE_START_UP);
       break;
     case HW_DISPLAY_FAILED:
+    failure_state_init(millis());
       system_state_set_loop_state(STATE_FAILED_SAFE);
       break;
     case HW_ADC_INIT_FAILED:
@@ -92,7 +94,7 @@ void loop() {
       fsm_handler_uninitialised();
       break;
     case STATE_FAILED_SAFE:
-      fsm_handler_failed_safe();
+      fsm_handler_failed_safe(now);
       break;
     case STATE_GPIO_FAILED:
       fsm_handler_gpio_failed();
@@ -218,9 +220,16 @@ void fsm_handler_hw_failure(void){
   }
 }
 
-void fsm_handler_failed_safe(void){
-  for(;;){
-    yield();
+void fsm_handler_failed_safe(const uint32_t now){
+  uint32_t last_check_time = failure_state_get_time();
+
+
+  if(has_timer_elapsed(now, last_check_time, ONE_SECOND_MS)){
+    const bool led_on = failure_state_get_led_on();
+
+    digitalWrite(LED_BUILTIN, led_on);
+    failure_state_set_led_on(!led_on);
+    failure_state_set_time(now);
   }
 }
 

@@ -49,4 +49,11 @@ void system_state_invert_pulse_on_flag(void);
 system_function_t system_state_get_pulse_check_time(uint32_t *check_time);
 system_function_t system_state_set_pulse_check_time(const uint32_t check_time);
 
+void failure_state_init(const uint32_t now);
+uint32_t failure_state_get_time(void);
+void failure_state_set_time(const uint32_t now);
+bool failure_state_get_led_on(void);
+void failure_state_set_led_on(const bool on_flag);
+bool failure_state_is_failed(void);
+
 #endif
