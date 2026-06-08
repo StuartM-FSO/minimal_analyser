@@ -11,6 +11,7 @@ constexpr uint16_t CAL_PERCENT_MIN = 75U;
 constexpr uint16_t CAL_PERCENT_MAX = 125U;
 constexpr uint16_t ADC_REFERENCE_RAW = 1600U; // for high output cells use 3200
 constexpr uint16_t ADC_REFERENCE_FO2_X10 = 210U;
+constexpr uint16_t MAXIMUM_FO2_X10 = 1050U;
 constexpr uint16_t MAXIMUM_PPO2_X1000 = 16000U;
 constexpr uint16_t DEPTH_CORRECTION_FACTOR = 10U;
 constexpr uint16_t HYPOXIC_THRESHOLD_X10 = 170U;
@@ -271,11 +272,11 @@ void print_mod_to_display(const uint16_t mod_msw){
 }
 
 void print_fo2_to_display(const uint16_t calibrated_fo2){
-  char buffer_fo2[BUFFER_SIZE_FO2_DISPLAY] = {""};
+  char buffer_fo2[BUFFER_SIZE_FO2_DISPLAY] = {};
 
   format_fo2_for_display(calibrated_fo2, buffer_fo2);
   display_print("fO2 ");
-  if(calibrated_fo2 < HYPOXIC_THRESHOLD_X10){
+  if((calibrated_fo2 < HYPOXIC_THRESHOLD_X10) || (calibrated_fo2 >= MAXIMUM_FO2_X10)){
     display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
   }
   display_print(buffer_fo2);
