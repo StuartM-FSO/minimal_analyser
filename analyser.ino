@@ -46,15 +46,12 @@ void setup() {
   }
 
   switch (state) {
-    case HW_UNINITIALISED:
-      system_state_set_loop_state(STATE_UNINITIALISED);
-      break;
     case HW_OK:
       system_state_set_loop_check_time(millis());
       system_state_set_loop_state(STATE_START_UP);
       break;
     case HW_DISPLAY_FAILED:
-    failure_state_init(millis());
+      failure_state_init(millis());
       system_state_set_loop_state(STATE_FAILED_SAFE);
       break;
     case HW_ADC_INIT_FAILED:
@@ -90,9 +87,6 @@ void loop() {
     case STATE_HW_FAILURE:
       fsm_handler_hw_failure();
       break;
-    case STATE_UNINITIALISED:
-      fsm_handler_uninitialised();
-      break;
     case STATE_FAILED_SAFE:
       fsm_handler_failed_safe(now);
       break;
@@ -121,10 +115,6 @@ void loop() {
 
 
 // 1. STATE MACHINE HANDLERS
-
-void fsm_handler_uninitialised(){
-  // Carry out a system reset and try again
-}
 
 void fsm_handler_gpio_failed(void){
   display_clear();
