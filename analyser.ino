@@ -239,7 +239,7 @@ void print_pulse_to_display(const uint32_t now){
 }
 
 void print_mv_to_display(const uint16_t mV){
-  char buffer_mv[BUFFER_SIZE_INTEGER_DISPLAY] = {""};
+  char buffer_mv[BUFFER_SIZE_INTEGER_DISPLAY] = {};
 
   format_integer_for_display(mV, buffer_mv);
   display_print("Cell");
@@ -255,7 +255,7 @@ void print_mv_to_display(const uint16_t mV){
 }
 
 void print_mod_to_display(const uint16_t mod_msw){
-  char buffer_mod[BUFFER_SIZE_INTEGER_DISPLAY] = {""};
+  char buffer_mod[BUFFER_SIZE_INTEGER_DISPLAY] = {};
 
   format_integer_for_display(mod_msw, buffer_mod);
   display_print("MOD");
