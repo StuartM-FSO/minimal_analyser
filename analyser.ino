@@ -47,7 +47,7 @@ void setup() {
 
   switch (state) {
     case HW_OK:
-      system_state_set_loop_check_time(millis());
+      //system_state_set_loop_check_time(millis());
       system_state_set_loop_state(STATE_START_UP);
       break;
     case HW_DISPLAY_FAILED:
