@@ -1,3 +1,11 @@
+//  NOTES
+//  1. This is based on a PSR-11-39 type cell which operates at 8-14mV in air at 1ATM. The middle of the range is 11mV. Adjust this
+//     value depending on the type of cell intended for use with the analyser. ADC_GAIN16_CONVERSION_CONSTANT has been mathematially derived.
+//  2. These control how much the cell reading can be adjusted with the calibration potentiometer. Default is +/- 50% (50-150%) at midrange
+//     on potentiometer.
+//  3. These are the typical minimum and maximum values that the chosen potentiometer gives. This has been derived through physical testing
+//     of random component samples. If using a different potentiometer from the reference design then test and replace with measured values.
+
 #include "adc_hal.h"
 #include "display_hal.h"
 #include "system_state.h"
@@ -5,19 +13,21 @@
 #include <Wire.h>
 
 constexpr uint32_t CELL_READ_FREQUENCY_MS = 250U;
-constexpr uint16_t POT_MIN = 0U;
-constexpr uint16_t POT_MAX = 700U;
-constexpr uint16_t CAL_PERCENT_MIN = 75U;
-constexpr uint16_t CAL_PERCENT_MAX = 125U;
-constexpr uint16_t ADC_REFERENCE_RAW = 1600U; // for high output cells use 3200
-constexpr uint16_t ADC_REFERENCE_FO2_X10 = 210U;
-constexpr uint16_t MAXIMUM_FO2_X10 = 1050U;
-constexpr uint16_t MAXIMUM_PPO2_X1000 = 16000U;
-constexpr uint16_t DEPTH_CORRECTION_FACTOR = 10U;
-constexpr uint16_t HYPOXIC_THRESHOLD_X10 = 170U;
-constexpr uint32_t ONE_SECOND_MS = 1000U;
-constexpr uint8_t BUFFER_SIZE_INTEGER_DISPLAY = 4U;
-constexpr uint8_t BUFFER_SIZE_FO2_DISPLAY = 6U;
+constexpr uint16_t POT_MIN = 0U;  // See Note 3
+constexpr uint16_t POT_MAX = 1100U; // See Note 3
+constexpr uint16_t CAL_PERCENT_MIN = 50U; // See Note 2
+constexpr uint16_t CAL_PERCENT_MAX = 150U; // See Note 2
+constexpr uint16_t MIDRANGE_MV = 11U; // See Note 1
+constexpr uint16_t ADC_GAIN16_CONVERSION_CONSTANT = 128U; // Do not change, see Note 1
+constexpr uint16_t ADC_REFERENCE_RAW = MIDRANGE_MV * ADC_GAIN16_CONVERSION_CONSTANT; // Do not change, calculated at compile time
+constexpr uint16_t ADC_REFERENCE_FO2_X10 = 210U; // FO2 of Air at 1ATM
+constexpr uint16_t MAXIMUM_FO2_X10 = 1050U; // Analyser has a maximum FO2 limit of 105%
+constexpr uint16_t MAXIMUM_PPO2_X1000 = 16000U;  // Used for MOD calculation (based on 1.6 max)
+constexpr uint16_t DEPTH_CORRECTION_FACTOR = 10U; // Convert from ATM to metres
+constexpr uint16_t HYPOXIC_THRESHOLD_X10 = 170U;  // 17% set as hypoxic threshold
+constexpr uint32_t ONE_SECOND_MS = 1000U;  // 1000ms for timing routines
+constexpr uint8_t BUFFER_SIZE_INTEGER_DISPLAY = 4U;  // Used for display formatting
+constexpr uint8_t BUFFER_SIZE_FO2_DISPLAY = 6U;  // Used for display formatting
 
 
 
@@ -27,11 +37,12 @@ void setup() {
   Wire.begin();
   pinMode(LED_BUILTIN, OUTPUT);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   while(!Serial){
     delay(1);
   }
   Serial.println("Initialising");
+  delay(250);
 
 
   if(!system_state_init()){
@@ -48,7 +59,7 @@ void setup() {
 
   switch (state) {
     case HW_OK:
-      //system_state_set_loop_check_time(millis());
+      system_state_set_loop_check_time(millis());
       system_state_set_loop_state(STATE_START_UP);
       break;
     case HW_DISPLAY_FAILED:

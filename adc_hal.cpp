@@ -20,7 +20,7 @@ static const uint8_t MAX_CONNECTION_CHECK_TRIES = 10U;
 
 
 // Constants
-static const uint8_t ADC_POWER_READ_PIN = A0;
+static const uint8_t ADC_POWER_READ_PIN = D2;
 static const uint8_t ADC_ADDRESS = 0x48;
 static const uint16_t ADC_MINIMUM_POWER_READING_MV = 2500; 
 //static const uint8_t THREE_CELLS = 3; // System is designed for reading 3 sensors, 4th channel is unused
