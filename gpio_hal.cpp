@@ -23,6 +23,5 @@ bool gpio_read_calibration_pin(uint16_t *read_val){
     return false;
   }
   *read_val = analogRead(CALIBRATION_PIN);
-  Serial.println(*read_val);
   return true;
 }

@@ -37,12 +37,7 @@ void setup() {
   Wire.begin();
   pinMode(LED_BUILTIN, OUTPUT);
 
-  Serial.begin(115200);
-  while(!Serial){
-    delay(1);
-  }
-  Serial.println("Initialising");
-  delay(250);
+  //Serial.begin(115200);
 
 
   if(!system_state_init()){
@@ -162,7 +157,6 @@ void fsm_handler_start_up(const uint32_t now){
     return;
   }
   if(!system_state_get_run_once_flag()){
-    Serial.println("Start up");
     display_clear();
     display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
     display_set_cursor(0, 0);

@@ -1,4 +1,4 @@
-#include "HardwareSerial.h"
+//#include "HardwareSerial.h"
 #include "system_state.h"
 
 typedef struct{
