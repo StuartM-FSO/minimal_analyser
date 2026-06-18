@@ -28,6 +28,8 @@ constexpr uint16_t HYPOXIC_THRESHOLD_X10 = 170U;  // 17% set as hypoxic threshol
 constexpr uint32_t ONE_SECOND_MS = 1000U;  // 1000ms for timing routines
 constexpr uint8_t BUFFER_SIZE_INTEGER_DISPLAY = 4U;  // Used for display formatting
 constexpr uint8_t BUFFER_SIZE_FO2_DISPLAY = 6U;  // Used for display formatting
+constexpr uint16_t POT_RANGE = POT_MAX - POT_MIN;
+constexpr uint16_t CALIBRATION_RANGE = CAL_PERCENT_MAX - CAL_PERCENT_MIN;
 
 
 
@@ -130,7 +132,7 @@ void fsm_handler_gpio_failed(void){
   display_println("FAILED");
   display_update();
   for(;;){
-    yield();
+    delay(1);
   }
 }
 
@@ -141,7 +143,7 @@ void fsm_handler_adc_failed(void){
   display_println("FAILED");
   display_update();
   for(;;){
-    yield();
+    delay(1);
   }
 }
 
@@ -172,7 +174,7 @@ void fsm_handler_read_cell(const uint32_t now){
   uint16_t calibration_reading = 0;
   uint16_t fo2 = 0;
   uint16_t mV = 0;
-  uint16_t calibrated_fo2;
+  uint16_t calibrated_fo2 = 0;
   uint16_t mod_msw = 0;
   
   if(system_state_get_loop_check_time(&last_check_time) != SYSTEM_OK){
@@ -366,8 +368,6 @@ bool has_timer_elapsed(const uint32_t current_time, const uint32_t last_time, co
 
 uint16_t calibrate_value_to_percent(uint16_t raw_reading, uint16_t potentiometer_reading){
   uint16_t calibration_factor = 0;
-  uint16_t calibration_range = CAL_PERCENT_MAX - CAL_PERCENT_MIN;
-  uint16_t pot_range = POT_MAX - POT_MIN;
 
   if(potentiometer_reading < POT_MIN){
     potentiometer_reading = POT_MIN;
@@ -375,10 +375,10 @@ uint16_t calibrate_value_to_percent(uint16_t raw_reading, uint16_t potentiometer
   if(potentiometer_reading > POT_MAX){
     potentiometer_reading = POT_MAX;
   }
-  if(pot_range == 0){
+  if(POT_RANGE == 0){
     return raw_reading;
   }
-  calibration_factor = CAL_PERCENT_MIN + ((uint32_t)(potentiometer_reading - POT_MIN) * calibration_range) / pot_range;
+  calibration_factor = CAL_PERCENT_MIN + ((uint32_t)(potentiometer_reading - POT_MIN) * CALIBRATION_RANGE) / POT_RANGE;
 
   return ((uint32_t)raw_reading * calibration_factor) / 100;
 }
