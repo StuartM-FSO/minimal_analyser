@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 // NOTES
 // 1. Wire.begin() must be called in setup() in main sketch
 // 2. Use of delay() has been accepted in this situation
@@ -210,7 +211,7 @@ static bool state_reset(state_t * const state){
     return true;
 }
 
-static hal_adc_status_t read_sensor(uint16_t * const reading){
+static hal_adc_status_t read_sensor(uint16_t * const reading, uint8_t chan){
     bool wait_timeout_ok;
     uint32_t start_time_ms = 0;
     uint32_t elapsed_time_ms = 0;
